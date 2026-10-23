@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Link, useLocation, useParams, useNavigate } from 'react-router-dom'
-import { Home, Shield, User, Newspaper, Users, Map, Trophy, Heart, Eye, Share2, Image as ImageIcon, Copy, ExternalLink } from 'lucide-react'
+import { Home, Shield, User, Newspaper, Map, Trophy, Heart, Eye, Share2, Image as ImageIcon, Copy, ExternalLink } from 'lucide-react'
 import './App.css'
 
 type TaskType =
@@ -54,10 +54,14 @@ interface Article {
 }
 
 interface Soldier {
+  id: string
   name: string
   rank: string
   points: number
   supra: string
+  avatar?: string
+  twitter?: string
+  telegram?: string
 }
 
 const initialTasks: Task[] = [
@@ -78,7 +82,7 @@ const sampleArticles: Article[] = [
   {
     id: 'a1',
     title: 'Supra Automation Hits Mainnet',
-    content: 'Native zero-delay automation is now live for all dApps. This marks a major milestone for the Supra ecosystem as builders can now deploy automated workflows without external infrastructure. The technology allows for complex multi-step operations to execute instantly on-chain.',
+    content: 'Native zero-delay automation is now live for all dApps. This marks a major milestone for the Supra ecosystem as builders can now deploy automated workflows without external infrastructure.',
     author: 'Redline Official',
     date: 'Oct 20, 2026',
     likes: 42,
@@ -89,7 +93,7 @@ const sampleArticles: Article[] = [
   {
     id: 'a2',
     title: 'Redline Army Crosses 10k Holders',
-    content: 'Community milestone reached as $REDLINE gains traction across the Supra ecosystem. More soldiers are joining every day and the community continues to grow stronger.',
+    content: 'Community milestone reached as $REDLINE gains traction across the Supra ecosystem.',
     author: 'Redline Official',
     date: 'Oct 19, 2026',
     likes: 28,
@@ -100,11 +104,11 @@ const sampleArticles: Article[] = [
 ]
 
 const sampleSoldiers: Soldier[] = [
-  { name: 'Alpha', rank: 'Captain', points: 1250, supra: 'alpha.supra' },
-  { name: 'Bravo', rank: 'Sergeant', points: 840, supra: 'bravo.supra' },
-  { name: 'Charlie', rank: 'Soldier', points: 510, supra: 'charlie.supra' },
-  { name: 'Delta', rank: 'Recruit', points: 320, supra: 'delta.supra' },
-  { name: 'Echo', rank: 'Lieutenant', points: 980, supra: 'echo.supra' },
+  { id: 's1', name: 'Alpha', rank: 'Captain', points: 1250, supra: 'alpha.supra', twitter: '@alpha', telegram: '@alpha' },
+  { id: 's2', name: 'Bravo', rank: 'Sergeant', points: 840, supra: 'bravo.supra', twitter: '@bravo' },
+  { id: 's3', name: 'Charlie', rank: 'Soldier', points: 510, supra: 'charlie.supra' },
+  { id: 's4', name: 'Delta', rank: 'Recruit', points: 320, supra: 'delta.supra' },
+  { id: 's5', name: 'Echo', rank: 'Lieutenant', points: 980, supra: 'echo.supra', twitter: '@echo' },
 ]
 
 const roadmapItems = [
@@ -114,6 +118,28 @@ const roadmapItems = [
   { phase: 'Phase 4', title: 'Army Expansion', status: 'Upcoming', items: ['NFT missions', 'Event hosting', 'Leaderboard rewards'] },
 ]
 
+const RANKS = [
+  { name: 'Recruit', threshold: 0 },
+  { name: 'Private', threshold: 500 },
+  { name: 'Specialist', threshold: 1000 },
+  { name: 'Sergeant', threshold: 2000 },
+  { name: 'Staff Sergeant', threshold: 4000 },
+  { name: 'Master Sergeant', threshold: 8000 },
+  { name: 'Warrant Officer', threshold: 16000 },
+  { name: 'Captain', threshold: 32000 },
+  { name: 'Colonel', threshold: 64000 },
+  { name: 'Five Star General', threshold: 128000 },
+]
+
+function getRankForPoints(points: number) {
+  return [...RANKS].reverse().find(rank => points >= rank.threshold) ?? RANKS[0]
+}
+
+function getNextRank(points: number) {
+  const currentIndex = RANKS.findIndex(rank => rank.name === getRankForPoints(points).name)
+  return RANKS[currentIndex + 1] ?? null
+}
+
 function App() {
   const [account, setAccount] = useState<string | null>(null)
   const [tasks, setTasks] = useState<Task[]>(initialTasks)
@@ -121,6 +147,7 @@ function App() {
     wallet: null, name: '', supraDns: '', twitter: '', telegram: '', rank: 'Recruit', points: 0, avatar: '',
   })
   const [articles, setArticles] = useState<Article[]>(sampleArticles)
+  const [soldiers, setSoldiers] = useState<Soldier[]>(sampleSoldiers)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -128,10 +155,20 @@ function App() {
     if (savedProfile) try { setProfile(JSON.parse(savedProfile)) } catch {}
     const savedArticles = localStorage.getItem('redline_articles')
     if (savedArticles) try { setArticles(JSON.parse(savedArticles)) } catch {}
+    const savedSoldiers = localStorage.getItem('redline_soldiers')
+    if (savedSoldiers) try { setSoldiers(JSON.parse(savedSoldiers)) } catch {}
   }, [])
+
+  useEffect(() => {
+  const rank = getRankForPoints(profile.points).name
+  if (profile.rank !== rank) {
+    setProfile(current => ({ ...current, rank }))
+  }
+}, [profile.points, profile.rank])
 
   useEffect(() => { localStorage.setItem('redline_profile', JSON.stringify(profile)) }, [profile])
   useEffect(() => { localStorage.setItem('redline_articles', JSON.stringify(articles)) }, [articles])
+  useEffect(() => { localStorage.setItem('redline_soldiers', JSON.stringify(soldiers)) }, [soldiers])
 
   const connectWallet = async () => {
     try {
@@ -155,15 +192,21 @@ function App() {
       <div className="app">
         <Sidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
         <div className="main-content">
-          <Header account={account} onConnect={connectWallet} onDisconnect={disconnectWallet} onMenuClick={() => setMobileMenuOpen(true)} />
-          <Routes>
-            <Route path="/" element={<HomePage tasks={tasks} articles={articles} />} />
+  <Header
+    account={account}
+    profile={profile}
+    onConnect={connectWallet}
+    onDisconnect={disconnectWallet}
+    onMenuClick={() => setMobileMenuOpen(true)}
+  />
+  <Routes>
+            <Route path="/" element={<HomePage tasks={tasks} articles={articles} soldiers={soldiers} profile={profile} />} />
             <Route path="/missions" element={<MissionsPage tasks={tasks} setTasks={setTasks} profile={profile} />} />
             <Route path="/profile" element={<ProfilePage profile={profile} setProfile={setProfile} account={account} />} />
             <Route path="/news" element={<NewsPage articles={articles} setArticles={setArticles} profile={profile} />} />
             <Route path="/news/:id" element={<ArticlePage articles={articles} setArticles={setArticles} profile={profile} />} />
-            <Route path="/soldiers" element={<SoldiersPage soldiers={sampleSoldiers} />} />
-            <Route path="/leaderboard" element={<LeaderboardPage soldiers={sampleSoldiers} />} />
+            <Route path="/leaderboard" element={<LeaderboardPage soldiers={soldiers} profile={profile} />} />
+            <Route path="/soldier/:id" element={<SoldierPage soldiers={soldiers} />} />
             <Route path="/roadmap" element={<RoadmapPage />} />
           </Routes>
           <RightSidebar profile={profile} account={account} className="mobile-right" />
@@ -182,7 +225,6 @@ function Sidebar({ mobileOpen, setMobileOpen }: any) {
     { to: '/missions', label: 'Missions', icon: Shield },
     { to: '/profile', label: 'Profile', icon: User },
     { to: '/news', label: 'News', icon: Newspaper },
-    { to: '/soldiers', label: 'Soldiers', icon: Users },
     { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
     { to: '/roadmap', label: 'Roadmap', icon: Map },
   ]
@@ -210,7 +252,30 @@ function Sidebar({ mobileOpen, setMobileOpen }: any) {
   )
 }
 
-function Header({ account, onConnect, onDisconnect, onMenuClick }: any) {
+function Header({
+  account,
+  profile,
+  onConnect,
+  onDisconnect,
+  onMenuClick,
+}: any) {
+  const points = Math.max(0, Number(profile?.points) || 0)
+  const currentRank = getRankForPoints(points)
+  const nextRank = getNextRank(points)
+
+  const pointsIntoRank = points - currentRank.threshold
+  const pointsForThisRank = nextRank
+    ? nextRank.threshold - currentRank.threshold
+    : 0
+
+  const progress = nextRank
+    ? Math.min(100, (pointsIntoRank / pointsForThisRank) * 100)
+    : 100
+
+  const pointsRemaining = nextRank
+    ? Math.max(0, nextRank.threshold - points)
+    : 0
+
   return (
     <header className="top-bar">
       <div className="top-bar-left">
@@ -218,15 +283,72 @@ function Header({ account, onConnect, onDisconnect, onMenuClick }: any) {
         <span className="live-dot" />
         <span className="top-title">REDLINE SUPRA ARMY</span>
       </div>
-      <div className="wallet">
-        {account ? (
-          <>
-            <span className="address">{account.slice(0, 6)}...{account.slice(-4)}</span>
-            <button onClick={onDisconnect} className="disconnect-btn">Disconnect</button>
-          </>
-        ) : (
-          <button onClick={onConnect} className="connect-btn">Connect Wallet</button>
+
+      <div className="top-bar-right">
+        {account && (
+          <div
+            className="rank-progress"
+            role="status"
+            aria-label={
+              nextRank
+                ? `${pointsRemaining} points remaining to rank up to ${nextRank.name}`
+                : 'Highest rank achieved'
+            }
+          >
+            <div className="rank-progress-heading">
+              <span className="rank-progress-current">
+                {currentRank.name}
+              </span>
+              <span className="rank-progress-points">
+                {points.toLocaleString()} pts
+              </span>
+            </div>
+
+            <div
+              className="rank-progress-track"
+              role="progressbar"
+              aria-label="Progress to next rank"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+            >
+              <div
+                className="rank-progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+
+            <div className="rank-progress-footer">
+              {nextRank ? (
+                <>
+                  <span>Next: {nextRank.name}</span>
+                  <strong>
+                    {pointsRemaining.toLocaleString()} points remaining
+                  </strong>
+                </>
+              ) : (
+                <strong>Highest rank achieved</strong>
+              )}
+            </div>
+          </div>
         )}
+
+        <div className="wallet">
+          {account ? (
+            <>
+              <span className="address">
+                {account.slice(0, 6)}...{account.slice(-4)}
+              </span>
+              <button onClick={onDisconnect} className="disconnect-btn">
+                Disconnect
+              </button>
+            </>
+          ) : (
+            <button onClick={onConnect} className="connect-btn">
+              Connect Wallet
+            </button>
+          )}
+        </div>
       </div>
     </header>
   )
@@ -274,12 +396,54 @@ function RightSidebar({ profile, account, className }: any) {
   )
 }
 
-function HomePage({ tasks, articles }: any) {
+function HomePage({ tasks, articles, soldiers, profile }: any) {
+  const navigate = useNavigate()
   const newestTasks = [...tasks].sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)).slice(0, 3)
   const newestArticles = articles.slice(0, 3)
 
+  const sortedSoldiers = [...soldiers].sort((a: Soldier, b: Soldier) => b.points - a.points)
+  const top5 = sortedSoldiers.slice(0, 5)
+
+  // Include current user in top 5 calculation if applicable
+  let displayTop5 = [...top5]
+  if (profile.name && profile.points > 0) {
+    const me: Soldier = {
+      id: 'me',
+      name: profile.name,
+      rank: profile.rank,
+      points: profile.points,
+      supra: profile.supraDns || '—',
+      avatar: profile.avatar,
+    }
+    if (!displayTop5.find(s => s.name === me.name)) {
+      displayTop5.push(me)
+      displayTop5.sort((a, b) => b.points - a.points)
+      displayTop5 = displayTop5.slice(0, 5)
+    }
+  }
+
   return (
     <div className="page">
+      <section className="section">
+        <h2>Top 5 Soldiers</h2>
+        <div className="task-list">
+          {displayTop5.map((s: Soldier, i: number) => (
+            <div key={s.id} className="task leaderboard-item" onClick={() => navigate(`/soldier/${s.id}`)} style={{ cursor: 'pointer' }}>
+              <div className="rank-number">#{i + 1}</div>
+              {s.avatar ? <img src={s.avatar} className="lb-avatar" alt="" /> : <div className="lb-avatar placeholder" />}
+              <div>
+                <h3>{s.name}</h3>
+                <p>{s.supra} • {s.rank}</p>
+              </div>
+              <div className="points-big">{s.points} PTS</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: '0 1.5rem', marginTop: '0.5rem' }}>
+          <Link to="/leaderboard" className="task-btn" style={{ display: 'inline-block' }}>View Full Leaderboard</Link>
+        </div>
+      </section>
+
       <section className="section">
         <h2>Newest Missions</h2>
         <div className="task-list">
@@ -291,13 +455,14 @@ function HomePage({ tasks, articles }: any) {
           ))}
         </div>
       </section>
+
       <section className="section">
         <h2>Latest News</h2>
         <div className="task-list">
           {newestArticles.map((item: Article) => (
             <div key={item.id} className="task">
               <div><h3>{item.title}</h3><p>{item.content.slice(0, 120)}...</p><span className="points">{item.date}</span></div>
-              <Link to="/news" className="task-btn">Read</Link>
+              <Link to={`/news/${item.id}`} className="task-btn">Read</Link>
             </div>
           ))}
         </div>
@@ -447,10 +612,7 @@ function NewsPage({ articles, setArticles, profile }: any) {
       author: profile.name || 'Anonymous Soldier',
       authorAvatar: profile.avatar,
       date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      likes: 0,
-      views: 0,
-      likedBy: [],
-      comments: [],
+      likes: 0, views: 0, likedBy: [], comments: [],
     }
     setArticles((prev: Article[]) => [newArticle, ...prev])
     setTitle(''); setContent(''); setArticleImage('')
@@ -461,20 +623,13 @@ function NewsPage({ articles, setArticles, profile }: any) {
     setArticles((prev: Article[]) => prev.map(a => {
       if (a.id !== id) return a
       const already = a.likedBy.includes(key)
-      return {
-        ...a,
-        likes: already ? a.likes - 1 : a.likes + 1,
-        likedBy: already ? a.likedBy.filter(x => x !== key) : [...a.likedBy, key],
-      }
+      return { ...a, likes: already ? a.likes - 1 : a.likes + 1, likedBy: already ? a.likedBy.filter(x => x !== key) : [...a.likedBy, key] }
     }))
   }
 
   const openArticle = (article: Article) => {
-    const words = article.content.trim().split(/\s+/).filter(Boolean).length
-    if (words > 200) {
-      setArticles((prev: Article[]) => prev.map(a => a.id === article.id ? { ...a, views: a.views + 1 } : a))
-      navigate(`/news/${article.id}`)
-    }
+    setArticles((prev: Article[]) => prev.map(a => a.id === article.id ? { ...a, views: a.views + 1 } : a))
+    navigate(`/news/${article.id}`)
   }
 
   const handleCommentImage = (articleId: string, e: React.ChangeEvent<HTMLInputElement>) => {
@@ -506,7 +661,6 @@ function NewsPage({ articles, setArticles, profile }: any) {
   return (
     <div className="page">
       <h1 className="page-title">Ecosystem News</h1>
-
       <div className="article-form x-style">
         <div className="post-header">
           {profile.avatar ? <img src={profile.avatar} className="post-avatar" alt="" /> : <div className="post-avatar placeholder" />}
@@ -520,53 +674,38 @@ function NewsPage({ articles, setArticles, profile }: any) {
         <div className="form-meta">
           <span className={wordCount > 5000 ? 'over-limit' : ''}>{wordCount}/5000</span>
           <div className="post-actions">
-            <label className="icon-btn" title="Add image">
-              <ImageIcon size={18} />
-              <input type="file" accept="image/*" onChange={handleArticleImage} hidden />
-            </label>
+            <label className="icon-btn" title="Add image"><ImageIcon size={18} /><input type="file" accept="image/*" onChange={handleArticleImage} hidden /></label>
             <button onClick={postArticle} className="connect-btn small">Post</button>
           </div>
         </div>
         {articleImage && <img src={articleImage} alt="Preview" className="article-preview" />}
       </div>
-
       <div className="articles">
         {articles.map((article: Article) => {
-          const words = article.content.trim().split(/\s+/).filter(Boolean).length
-          const isLong = words > 200
           const liked = article.likedBy.includes(profile.wallet || profile.name || 'anon')
           return (
             <div key={article.id} className="article-card x-card">
               <div className="post-header">
                 {article.authorAvatar ? <img src={article.authorAvatar} className="post-avatar" alt="" /> : <div className="post-avatar placeholder" />}
-                <div>
-                  <div className="post-author">{article.author}</div>
-                  <div className="post-sub">{article.date}</div>
-                </div>
+                <div><div className="post-author">{article.author}</div><div className="post-sub">{article.date}</div></div>
               </div>
-              <h3 className="x-title" onClick={() => isLong && openArticle(article)} style={{ cursor: isLong ? 'pointer' : 'default' }}>
-                {article.title}
-              </h3>
+              <h3 className="x-title" onClick={() => openArticle(article)}>{article.title}</h3>
               {article.image && <img src={article.image} alt="" className="article-image" />}
-              <p className="article-content" onClick={() => isLong && openArticle(article)}>
-                {isLong ? article.content.slice(0, 280) + '...' : article.content}
-                {isLong && <span className="read-more"> Read more</span>}
+              <p className="article-content" onClick={() => openArticle(article)}>
+                {article.content.length > 280 ? article.content.slice(0, 280) + '...' : article.content}
+                {article.content.length > 280 && <span className="read-more"> Read more</span>}
               </p>
               <div className="x-actions">
-                <button className={`icon-btn ${liked ? 'liked' : ''}`} onClick={() => toggleLike(article.id)}>
-                  <Heart size={16} fill={liked ? '#ff2d2d' : 'none'} /> {article.likes}
-                </button>
+                <button className={`icon-btn ${liked ? 'liked' : ''}`} onClick={() => toggleLike(article.id)}><Heart size={16} fill={liked ? '#ff2d2d' : 'none'} /> {article.likes}</button>
                 <span className="icon-btn"><Eye size={16} /> {article.views}</span>
-                <button className="icon-btn" onClick={() => setShareOpen(shareOpen === article.id ? null : article.id)}>
-                  <Share2 size={16} />
-                </button>
+                <button className="icon-btn" onClick={() => setShareOpen(shareOpen === article.id ? null : article.id)}><Share2 size={16} /></button>
               </div>
               {shareOpen === article.id && (
                 <div className="share-panel">
                   <button onClick={() => { navigator.clipboard.writeText(shareUrl(article.id)); alert('Link copied') }}><Copy size={14} /> Copy Link</button>
                   <a href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(shareUrl(article.id))}`} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Share to X</a>
                   <a href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl(article.id))}&text=${encodeURIComponent(article.title)}`} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Telegram</a>
-                  <a href={`https://discord.com/channels/@me`} target="_blank" rel="noreferrer"><ExternalLink size={14} /> Discord</a>
+                  <a href="https://discord.com/channels/@me" target="_blank" rel="noreferrer"><ExternalLink size={14} /> Discord</a>
                 </div>
               )}
               <div className="comments">
@@ -584,7 +723,7 @@ function NewsPage({ articles, setArticles, profile }: any) {
                 <div className="comment-form">
                   <textarea placeholder="Reply..." value={commentTexts[article.id] || ''} onChange={e => setCommentTexts(prev => ({ ...prev, [article.id]: e.target.value }))} rows={2} />
                   <div className="comment-actions">
-                    <label className="icon-btn" title="Add image/GIF"><ImageIcon size={16} /><input type="file" accept="image/*" onChange={e => handleCommentImage(article.id, e)} hidden /></label>
+                    <label className="icon-btn"><ImageIcon size={16} /><input type="file" accept="image/*" onChange={e => handleCommentImage(article.id, e)} hidden /></label>
                     <button onClick={() => postComment(article.id)} className="connect-btn small">Reply</button>
                   </div>
                   {commentImages[article.id] && <img src={commentImages[article.id]} alt="" className="comment-preview" />}
@@ -607,9 +746,7 @@ function ArticlePage({ articles, setArticles, profile }: any) {
   const [shareOpen, setShareOpen] = useState(false)
 
   useEffect(() => {
-    if (article) {
-      setArticles((prev: Article[]) => prev.map(a => a.id === id ? { ...a, views: a.views + 1 } : a))
-    }
+    if (article) setArticles((prev: Article[]) => prev.map(a => a.id === id ? { ...a, views: a.views + 1 } : a))
   }, [id])
 
   if (!article) return <div className="page"><h1 className="page-title">Article not found</h1></div>
@@ -657,10 +794,7 @@ function ArticlePage({ articles, setArticles, profile }: any) {
       <div className="article-full">
         <div className="post-header">
           {article.authorAvatar ? <img src={article.authorAvatar} className="post-avatar large" alt="" /> : <div className="post-avatar large placeholder" />}
-          <div>
-            <div className="post-author">{article.author}</div>
-            <div className="post-sub">{article.date}</div>
-          </div>
+          <div><div className="post-author">{article.author}</div><div className="post-sub">{article.date}</div></div>
         </div>
         <h1 className="full-title">{article.title}</h1>
         {article.image && <img src={article.image} alt="" className="article-image full" />}
@@ -700,7 +834,6 @@ function ArticlePage({ articles, setArticles, profile }: any) {
           </div>
         </div>
       </div>
-
       {sameAuthor.length > 0 && (
         <section className="section">
           <h2>More from {article.author}</h2>
@@ -713,7 +846,6 @@ function ArticlePage({ articles, setArticles, profile }: any) {
           </div>
         </section>
       )}
-
       {related.length > 0 && (
         <section className="section">
           <h2>Related Articles</h2>
@@ -730,32 +862,72 @@ function ArticlePage({ articles, setArticles, profile }: any) {
   )
 }
 
-function SoldiersPage({ soldiers }: any) {
+function LeaderboardPage({ soldiers, profile }: any) {
+  const navigate = useNavigate()
+  const sorted = [...soldiers].sort((a: Soldier, b: Soldier) => b.points - a.points)
+
+  const allSoldiers = [...sorted]
+  if (profile.name && profile.points > 0 && !allSoldiers.find(s => s.name === profile.name)) {
+    allSoldiers.push({
+      id: 'me',
+      name: profile.name,
+      rank: profile.rank,
+      points: profile.points,
+      supra: profile.supraDns || '—',
+      avatar: profile.avatar,
+      twitter: profile.twitter,
+      telegram: profile.telegram,
+    })
+    allSoldiers.sort((a, b) => b.points - a.points)
+  }
+
   return (
     <div className="page">
-      <h1 className="page-title">Soldiers Hub</h1>
+      <h1 className="page-title">Leaderboard</h1>
+      <p style={{ margin: '0 1.5rem 1rem', color: '#888' }}>Ranked by total points</p>
       <div className="task-list">
-        {soldiers.map((s: Soldier, i: number) => (
-          <div key={i} className="task"><div><h3>{s.name}</h3><p>{s.supra} • {s.rank}</p><span className="points">{s.points} PTS</span></div></div>
+        {allSoldiers.map((s: Soldier, i: number) => (
+          <div key={s.id} className="task leaderboard-item" onClick={() => navigate(`/soldier/${s.id}`)} style={{ cursor: 'pointer' }}>
+            <div className="rank-number">#{i + 1}</div>
+            {s.avatar ? <img src={s.avatar} className="lb-avatar" alt="" /> : <div className="lb-avatar placeholder" />}
+            <div>
+              <h3>{s.name}</h3>
+              <p>{s.supra} • {s.rank}</p>
+            </div>
+            <div className="points-big">{s.points} PTS</div>
+          </div>
         ))}
       </div>
     </div>
   )
 }
 
-function LeaderboardPage({ soldiers }: any) {
-  const sorted = [...soldiers].sort((a, b) => b.points - a.points)
+function SoldierPage({ soldiers }: any) {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const soldier = soldiers.find((s: Soldier) => s.id === id)
+
+  if (!soldier) return <div className="page"><h1 className="page-title">Soldier not found</h1></div>
+
   return (
     <div className="page">
-      <h1 className="page-title">Leaderboard</h1>
-      <div className="task-list">
-        {sorted.map((s: Soldier, i: number) => (
-          <div key={i} className="task leaderboard-item">
-            <div className="rank-number">#{i + 1}</div>
-            <div><h3>{s.name}</h3><p>{s.supra} • {s.rank}</p></div>
-            <div className="points-big">{s.points} PTS</div>
-          </div>
-        ))}
+      <button onClick={() => navigate('/leaderboard')} className="back-btn">← Back to Leaderboard</button>
+      <div className="profile-header">
+        <div className="avatar-wrapper">
+          {soldier.avatar ? <img src={soldier.avatar} className="avatar" alt="" /> : <div className="avatar-placeholder">No Photo</div>}
+        </div>
+        <div className="profile-summary">
+          <div className="name">{soldier.name}</div>
+          <div className="wallet-short">{soldier.supra}</div>
+          <div className="rank-badge">{soldier.rank.toUpperCase()}</div>
+        </div>
+      </div>
+      <div className="profile-card">
+        <div className="profile-row"><label>Rank</label><span className="value rank">{soldier.rank}</span></div>
+        <div className="profile-row"><label>Points</label><span className="value">{soldier.points}</span></div>
+        <div className="profile-row"><label>Supra DNS</label><span className="value">{soldier.supra}</span></div>
+        {soldier.twitter && <div className="profile-row"><label>X / Twitter</label><span className="value">{soldier.twitter}</span></div>}
+        {soldier.telegram && <div className="profile-row"><label>Telegram</label><span className="value">{soldier.telegram}</span></div>}
       </div>
     </div>
   )
