@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { Home, Shield, User, Newspaper, Users, Map, Trophy } from 'lucide-react'
 import './App.css'
 
 type TaskType =
@@ -35,6 +36,13 @@ interface NewsItem {
   date: string
 }
 
+interface Soldier {
+  name: string
+  rank: string
+  points: number
+  supra: string
+}
+
 const initialTasks: Task[] = [
   { id: '1', title: 'Follow @Redline_Sup on X', description: 'Follow the official Redline Supra Army account', points: 50, type: 'x_follow', status: 'available', addedAt: 1 },
   { id: '2', title: 'Like our latest post', description: 'Like the most recent announcement on X', points: 25, type: 'x_like', status: 'available', addedAt: 2 },
@@ -54,6 +62,21 @@ const sampleNews: NewsItem[] = [
   { id: 'n2', title: 'Redline Army Crosses 10k Holders', summary: 'Community milestone reached as $REDLINE gains traction.', date: 'Oct 19, 2026' },
   { id: 'n3', title: 'SupraEVM Devnet Update', summary: 'New RPC endpoints and improved stability for EVM builders.', date: 'Oct 18, 2026' },
   { id: 'n4', title: 'HyperNova Bridge Expansion', summary: 'Additional assets now supported for seamless bridging.', date: 'Oct 15, 2026' },
+]
+
+const sampleSoldiers: Soldier[] = [
+  { name: 'Alpha', rank: 'Captain', points: 1250, supra: 'alpha.supra' },
+  { name: 'Bravo', rank: 'Sergeant', points: 840, supra: 'bravo.supra' },
+  { name: 'Charlie', rank: 'Soldier', points: 510, supra: 'charlie.supra' },
+  { name: 'Delta', rank: 'Recruit', points: 320, supra: 'delta.supra' },
+  { name: 'Echo', rank: 'Lieutenant', points: 980, supra: 'echo.supra' },
+]
+
+const roadmapItems = [
+  { phase: 'Phase 1', title: 'Launch Hub', status: 'Completed', items: ['Frontend deployment', 'Basic missions', 'Profile system'] },
+  { phase: 'Phase 2', title: 'Verification', status: 'In Progress', items: ['X API integration', 'On-chain hold checks', 'Form review system'] },
+  { phase: 'Phase 3', title: 'On-Chain Points', status: 'Upcoming', items: ['Move smart contract', 'Points claiming', 'Snapshot for airdrop'] },
+  { phase: 'Phase 4', title: 'Army Expansion', status: 'Upcoming', items: ['NFT missions', 'Event hosting', 'Leaderboard rewards'] },
 ]
 
 function App() {
@@ -89,7 +112,9 @@ function App() {
           <Route path="/missions" element={<MissionsPage tasks={tasks} setTasks={setTasks} profile={profile} />} />
           <Route path="/profile" element={<ProfilePage profile={profile} setProfile={setProfile} account={account} />} />
           <Route path="/news" element={<NewsPage news={sampleNews} />} />
-          <Route path="/soldiers" element={<SoldiersPage />} />
+          <Route path="/soldiers" element={<SoldiersPage soldiers={sampleSoldiers} />} />
+          <Route path="/leaderboard" element={<LeaderboardPage soldiers={sampleSoldiers} />} />
+          <Route path="/roadmap" element={<RoadmapPage />} />
         </Routes>
       </div>
     </BrowserRouter>
@@ -133,11 +158,13 @@ function Header({ account, onConnect, onDisconnect }: any) {
           <button onClick={close} className="close-btn">✕</button>
         </div>
         <nav className="drawer-nav">
-          <Link to="/" className="drawer-link" onClick={close}>🏠 Home</Link>
-          <Link to="/missions" className="drawer-link" onClick={close}>🛡️ Missions</Link>
-          <Link to="/profile" className="drawer-link" onClick={close}>👤 Profile</Link>
-          <Link to="/news" className="drawer-link" onClick={close}><span className="supra-mark">S</span> Ecosystem News</Link>
-          <Link to="/soldiers" className="drawer-link" onClick={close}>⚔️ Soldiers Hub</Link>
+          <Link to="/" className="drawer-link" onClick={close}><Home size={18} /> Home</Link>
+          <Link to="/missions" className="drawer-link" onClick={close}><Shield size={18} /> Missions</Link>
+          <Link to="/profile" className="drawer-link" onClick={close}><User size={18} /> Profile</Link>
+          <Link to="/news" className="drawer-link" onClick={close}><Newspaper size={18} /> Ecosystem News</Link>
+          <Link to="/soldiers" className="drawer-link" onClick={close}><Users size={18} /> Soldiers Hub</Link>
+          <Link to="/leaderboard" className="drawer-link" onClick={close}><Trophy size={18} /> Leaderboard</Link>
+          <Link to="/roadmap" className="drawer-link" onClick={close}><Map size={18} /> Roadmap</Link>
         </nav>
       </aside>
     </>
@@ -319,23 +346,63 @@ function NewsPage({ news }: any) {
   )
 }
 
-function SoldiersPage() {
-  const sampleSoldiers = [
-    { name: 'Alpha', rank: 'Captain', points: 1250, supra: 'alpha.supra' },
-    { name: 'Bravo', rank: 'Sergeant', points: 840, supra: 'bravo.supra' },
-    { name: 'Charlie', rank: 'Soldier', points: 510, supra: 'charlie.supra' },
-  ]
+function SoldiersPage({ soldiers }: any) {
   return (
     <main className="main">
       <h1 className="page-title">Soldiers Standing Strong</h1>
       <p style={{ marginBottom: '1.2rem', color: '#888' }}>Soldiers actively supporting the Supra blockchain.</p>
       <div className="task-list">
-        {sampleSoldiers.map((s, i) => (
+        {soldiers.map((s: Soldier, i: number) => (
           <div key={i} className="task">
             <div className="task-info">
               <h3>{s.name}</h3>
               <p className="task-desc">{s.supra} • {s.rank}</p>
               <span className="points">{s.points} PTS</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
+  )
+}
+
+function LeaderboardPage({ soldiers }: any) {
+  const sorted = [...soldiers].sort((a, b) => b.points - a.points)
+
+  return (
+    <main className="main">
+      <h1 className="page-title">Leaderboard</h1>
+      <p style={{ marginBottom: '1.2rem', color: '#888' }}>Top soldiers ranked by points.</p>
+      <div className="task-list">
+        {sorted.map((s: Soldier, i: number) => (
+          <div key={i} className="task leaderboard-item">
+            <div className="rank-number">#{i + 1}</div>
+            <div className="task-info">
+              <h3>{s.name}</h3>
+              <p className="task-desc">{s.supra} • {s.rank}</p>
+            </div>
+            <div className="points-big">{s.points} PTS</div>
+          </div>
+        ))}
+      </div>
+    </main>
+  )
+}
+
+function RoadmapPage() {
+  return (
+    <main className="main">
+      <h1 className="page-title">Redline Roadmap</h1>
+      <div className="roadmap">
+        {roadmapItems.map((item, i) => (
+          <div key={i} className="roadmap-item">
+            <div className="roadmap-phase">{item.phase}</div>
+            <div className="roadmap-content">
+              <h3>{item.title}</h3>
+              <span className={`status-badge ${item.status.toLowerCase().replace(' ', '-')}`}>{item.status}</span>
+              <ul>
+                {item.items.map((sub, j) => <li key={j}>{sub}</li>)}
+              </ul>
             </div>
           </div>
         ))}
