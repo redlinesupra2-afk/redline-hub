@@ -676,3 +676,33 @@
 .roadmap-item {
   width: 100%;
 }
+
+/* Full width on PC */
+.main {
+  max-width: none;
+  width: 100%;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .main {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .main {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* Optional: keep a soft max so it doesn’t stretch endlessly on ultra-wide monitors */
+@media (min-width: 1600px) {
+  .main {
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+}
