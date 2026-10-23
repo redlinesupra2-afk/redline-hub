@@ -85,6 +85,7 @@ function App() {
   const [profile, setProfile] = useState<UserProfile>({
     wallet: null, name: '', supraDns: '', twitter: '', telegram: '', rank: 'Recruit', points: 0,
   })
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const connectWallet = async () => {
     try {
@@ -106,9 +107,14 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <Sidebar />
+        <Sidebar mobileOpen={mobileMenuOpen} setMobileOpen={setMobileMenuOpen} />
         <div className="main-content">
-          <Header account={account} onConnect={connectWallet} onDisconnect={disconnectWallet} />
+          <Header 
+            account={account} 
+            onConnect={connectWallet} 
+            onDisconnect={disconnectWallet}
+            onMenuClick={() => setMobileMenuOpen(true)}
+          />
           <Routes>
             <Route path="/" element={<HomePage tasks={tasks} news={sampleNews} />} />
             <Route path="/missions" element={<MissionsPage tasks={tasks} setTasks={setTasks} profile={profile} />} />
@@ -118,15 +124,17 @@ function App() {
             <Route path="/leaderboard" element={<LeaderboardPage soldiers={sampleSoldiers} />} />
             <Route path="/roadmap" element={<RoadmapPage />} />
           </Routes>
+          <RightSidebar profile={profile} account={account} className="mobile-right" />
         </div>
-        <RightSidebar profile={profile} account={account} />
+        <RightSidebar profile={profile} account={account} className="desktop-right" />
       </div>
     </BrowserRouter>
   )
 }
 
-function Sidebar() {
+function Sidebar({ mobileOpen, setMobileOpen }: any) {
   const location = useLocation()
+  const close = () => setMobileOpen(false)
   const links = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/missions', label: 'Missions', icon: Shield },
@@ -138,34 +146,39 @@ function Sidebar() {
   ]
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <img src="/redline logo.jpg" alt="Redline" />
-        <div>
-          <div className="redline">REDLINE</div>
-          <div className="hub">ARMY</div>
+    <>
+      <div className={`drawer-overlay ${mobileOpen ? 'open' : ''}`} onClick={close} />
+      <aside className={`sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+        <div className="sidebar-logo">
+          <img src="/redline logo.jpg" alt="Redline" />
+          <div>
+            <div className="redline">REDLINE</div>
+            <div className="hub">ARMY</div>
+          </div>
         </div>
-      </div>
-      <nav>
-        {links.map(({ to, label, icon: Icon }) => (
-          <Link
-            key={to}
-            to={to}
-            className={`sidebar-link ${location.pathname === to ? 'active' : ''}`}
-          >
-            <Icon size={18} />
-            <span>{label}</span>
-          </Link>
-        ))}
-      </nav>
-    </aside>
+        <nav>
+          {links.map(({ to, label, icon: Icon }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`sidebar-link ${location.pathname === to ? 'active' : ''}`}
+              onClick={close}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
+      </aside>
+    </>
   )
 }
 
-function Header({ account, onConnect, onDisconnect }: any) {
+function Header({ account, onConnect, onDisconnect, onMenuClick }: any) {
   return (
     <header className="top-bar">
       <div className="top-bar-left">
+        <button className="mobile-menu-btn" onClick={onMenuClick}>☰</button>
         <span className="live-dot" /> REDLINE SUPRA ARMY
       </div>
       <div className="wallet">
@@ -182,9 +195,9 @@ function Header({ account, onConnect, onDisconnect }: any) {
   )
 }
 
-function RightSidebar({ profile, account }: any) {
+function RightSidebar({ profile, account, className }: any) {
   return (
-    <aside className="right-sidebar">
+    <aside className={`right-sidebar ${className || ''}`}>
       <div className="sidebar-card">
         <div className="sidebar-title">Soldier Status</div>
         <div className="stat-row">

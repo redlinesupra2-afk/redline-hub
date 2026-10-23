@@ -28,10 +28,14 @@ html, body, #root {
   background: #0a0a0a;
   border-right: 1px solid #1a1a1a;
   padding: 1.2rem 0;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
   height: 100vh;
+  z-index: 50;
   flex-shrink: 0;
+  transform: translateX(0);
+  transition: transform 0.25s ease;
 }
 
 .sidebar-logo {
@@ -65,10 +69,13 @@ html, body, #root {
 /* Main content */
 .main-content {
   flex: 1;
+  margin-left: 240px;
+  margin-right: 260px;
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  width: 100%;
 }
 
 .top-bar {
@@ -94,6 +101,17 @@ html, body, #root {
   font-size: 0.85rem;
 }
 .live-dot { width: 8px; height: 8px; background: #ff2d2d; border-radius: 50%; }
+
+.mobile-menu-btn {
+  display: none;
+  background: #1a1a1a;
+  color: #ddd;
+  border: 1px solid #333;
+  padding: 0.4rem 0.7rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-right: 0.6rem;
+}
 
 .wallet { display: flex; align-items: center; gap: 0.6rem; }
 .connect-btn, .disconnect-btn, .task-btn, .quick-btn {
@@ -126,7 +144,6 @@ html, body, #root {
   margin: 0;
 }
 
-/* Banner */
 .hero {
   width: 100%;
   margin: 0;
@@ -152,13 +169,8 @@ html, body, #root {
 }
 .hero-text p { color: #777; margin-top: 0.3rem; }
 
-/* Sections */
-.section {
-  margin-top: 2rem;
-  padding: 0 1.5rem;
-}
-.section h2,
-.page-title {
+.section { margin-top: 2rem; padding: 0 1.5rem; }
+.section h2, .page-title {
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -175,14 +187,7 @@ html, body, #root {
   margin: 0;
 }
 
-/* Task list – bottom cards fixed */
-.task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  padding: 0 1.5rem 2rem;
-}
-
+.task-list { display: flex; flex-direction: column; gap: 0.7rem; padding: 0 1.5rem 2rem; }
 .task {
   display: flex;
   justify-content: space-between;
@@ -194,50 +199,28 @@ html, body, #root {
   width: 100%;
   text-align: left;
 }
-
-.task > div {
-  flex: 1;
-  text-align: left;
-}
-
+.task > div { flex: 1; text-align: left; }
 .task h3 {
   font-size: 0.95rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   margin-bottom: 0.25rem;
-  text-align: left;
 }
-
 .task p {
   color: #666;
   font-size: 0.8rem;
   margin: 0.15rem 0 0.4rem;
   line-height: 1.3;
-  text-align: left;
 }
-
-.points {
-  color: #ff2d2d;
-  font-size: 0.78rem;
-  font-weight: 700;
-  display: block;
-  text-align: left;
-}
-
+.points { color: #ff2d2d; font-size: 0.78rem; font-weight: 700; display: block; }
 .task-btn {
   background: transparent;
   border: 1px solid #333;
   color: #aaa;
   flex-shrink: 0;
-  align-self: center;
 }
-
-.task-btn:hover {
-  background: #ff2d2d;
-  border-color: #ff2d2d;
-  color: white;
-}
+.task-btn:hover { background: #ff2d2d; border-color: #ff2d2d; color: white; }
 
 .points-card {
   background: #0a0a0a;
@@ -311,12 +294,16 @@ html, body, #root {
   background: #0a0a0a;
   border-left: 1px solid #1a1a1a;
   padding: 1.2rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  right: 0;
   height: 100vh;
   flex-shrink: 0;
   overflow-y: auto;
 }
+.desktop-right { display: block; }
+.mobile-right { display: none; }
+
 .sidebar-card {
   background: #111;
   border: 1px solid #1a1a1a;
@@ -350,6 +337,18 @@ html, body, #root {
 }
 .quick-btn:hover { background: #ff2d2d; border-color: #ff2d2d; color: white; }
 
+/* Mobile drawer */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 40;
+}
+.drawer-overlay.open { display: block; }
+
+.sidebar.mobile-open { transform: translateX(0); }
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -379,58 +378,40 @@ html, body, #root {
 .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
 
 /* Responsive */
-@media (max-width: 1100px) { .right-sidebar { display: none; } }
-@media (max-width: 800px) {
-  .sidebar { display: none; }
-  .app { flex-direction: column; }
-  .page-title, .section, .task-list, .points-card, .profile-card, .roadmap, .profile-actions {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  .points-card, .profile-card { width: 100%; margin: 0 0 1rem 0; }
-}
-
-/* Lock sidebars, scroll only the middle */
-.sidebar,
-.right-sidebar {
-  position: fixed;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.sidebar {
-  left: 0;
-}
-
-.right-sidebar {
-  right: 0;
-}
-
-.main-content {
-  margin-left: 240px;
-  margin-right: 260px;
-  height: 100vh;
-  overflow-y: auto;
-}
-
-.top-bar {
-  position: sticky;
-  top: 0;
-}
-
-/* Responsive: remove fixed margins on smaller screens */
 @media (max-width: 1100px) {
-  .right-sidebar { display: none; }
+  .right-sidebar.desktop-right { display: none; }
   .main-content { margin-right: 0; }
 }
 
 @media (max-width: 800px) {
-  .sidebar { display: none; }
+  .mobile-menu-btn { display: inline-block; }
+
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.mobile-open { transform: translateX(0); }
+
   .main-content {
     margin-left: 0;
     margin-right: 0;
     height: auto;
     overflow-y: visible;
   }
+
+  .desktop-right { display: none; }
+  .mobile-right {
+    display: block;
+    width: 100%;
+    height: auto;
+    position: static;
+    border-left: none;
+    border-top: 1px solid #1a1a1a;
+    margin-top: 2rem;
+  }
+
+  .page-title, .section, .task-list, .points-card, .profile-card, .roadmap, .profile-actions {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .points-card, .profile-card { width: 100%; margin: 0 0 1rem 0; }
 }
