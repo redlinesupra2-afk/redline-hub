@@ -153,7 +153,7 @@ function Sidebar({ mobileOpen, setMobileOpen }: any) {
           <img src="/redline logo.jpg" alt="Redline" />
           <div>
             <div className="redline">REDLINE</div>
-            <div className="hub">ARMY</div>
+            <div className="hub">HUB</div>
           </div>
         </div>
         <nav>
@@ -179,7 +179,8 @@ function Header({ account, onConnect, onDisconnect, onMenuClick }: any) {
     <header className="top-bar">
       <div className="top-bar-left">
         <button className="mobile-menu-btn" onClick={onMenuClick}>☰</button>
-        <span className="live-dot" /> REDLINE SUPRA ARMY
+        <span className="live-dot" />
+        <span className="top-title">REDLINE SUPRA ARMY</span>
       </div>
       <div className="wallet">
         {account ? (
@@ -213,10 +214,49 @@ function RightSidebar({ profile, account, className }: any) {
           <strong className="mono">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not connected'}</strong>
         </div>
       </div>
+
       <div className="sidebar-card">
         <div className="sidebar-title">Quick Actions</div>
         <Link to="/missions" className="quick-btn">View Missions</Link>
         <Link to="/leaderboard" className="quick-btn">Leaderboard</Link>
+      </div>
+
+      <div className="sidebar-card">
+        <div className="sidebar-title">Tokens</div>
+
+        <div className="token-card">
+          <div className="token-header">
+            <div className="token-name">$SUPRA</div>
+            <div className="token-price">$0.0042</div>
+          </div>
+          <div className="token-change positive">+4.8%</div>
+          <div className="mini-chart">
+            <div className="chart-line" style={{ height: '45%' }} />
+            <div className="chart-line" style={{ height: '62%' }} />
+            <div className="chart-line" style={{ height: '38%' }} />
+            <div className="chart-line" style={{ height: '70%' }} />
+            <div className="chart-line" style={{ height: '55%' }} />
+            <div className="chart-line" style={{ height: '82%' }} />
+            <div className="chart-line" style={{ height: '68%' }} />
+          </div>
+        </div>
+
+        <div className="token-card">
+          <div className="token-header">
+            <div className="token-name">$REDLINE</div>
+            <div className="token-price">$0.00018</div>
+          </div>
+          <div className="token-change positive">+12.4%</div>
+          <div className="mini-chart">
+            <div className="chart-line" style={{ height: '30%' }} />
+            <div className="chart-line" style={{ height: '48%' }} />
+            <div className="chart-line" style={{ height: '55%' }} />
+            <div className="chart-line" style={{ height: '42%' }} />
+            <div className="chart-line" style={{ height: '75%' }} />
+            <div className="chart-line" style={{ height: '88%' }} />
+            <div className="chart-line" style={{ height: '92%' }} />
+          </div>
+        </div>
       </div>
     </aside>
   )
@@ -228,14 +268,6 @@ function HomePage({ tasks, news }: any) {
 
   return (
     <div className="page">
-      <div className="hero">
-        <img src="/Redline Banner.jpg" alt="Banner" className="banner" />
-        <div className="hero-text">
-          <h1>REDLINE SUPRA ARMY</h1>
-          <p>One Army. One Chain. One Mission.</p>
-        </div>
-      </div>
-
       <section className="section">
         <h2>Newest Missions</h2>
         <div className="task-list">
