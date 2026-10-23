@@ -8,6 +8,7 @@
 
 .app {
   min-height: 100vh;
+  width: 100%;
   background: #050505;
   background-image: 
     linear-gradient(rgba(255, 45, 45, 0.025) 1px, transparent 1px),
@@ -110,36 +111,34 @@
   font-size: 0.8rem;
 }
 
-/* Main – full width */
+/* Main – forces full width */
 .main {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 1.5rem 1.5rem 4rem;
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 1.5rem 1.5rem 4rem !important;
 }
 
 @media (min-width: 768px) {
   .main {
-    padding: 2rem 2.5rem 4rem;
+    padding: 2rem 2rem 4rem !important;
   }
 }
 
 @media (min-width: 1200px) {
   .main {
-    padding: 2rem 3.5rem 4rem;
-  }
-}
-
-@media (min-width: 1600px) {
-  .main {
-    padding: 2rem 5rem 4rem;
+    padding: 2rem 3rem 4rem !important;
   }
 }
 
 /* Hero */
-.hero { margin-bottom: 1.8rem; width: 100%; }
-.banner {
+.hero {
   width: 100%;
+  margin-bottom: 1.8rem;
+}
+.banner {
+  width: 100% !important;
+  max-width: none !important;
   height: auto;
   display: block;
   border-radius: 4px;
@@ -504,7 +503,7 @@
   font-size: 0.9rem;
 }
 
-/* Mobile adjustments */
+/* Mobile */
 @media (max-width: 640px) {
   .profile-row { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
   .profile-row input, .profile-row .value { max-width: 100%; text-align: left; }
@@ -513,5 +512,5 @@
   .points-card { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
   .logo-text { font-size: 1.2rem; }
   .header { padding: 1rem 1rem; }
+  .main { padding: 1.5rem 1rem 4rem !important; }
 }
-
