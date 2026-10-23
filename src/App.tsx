@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
 import { Home, Shield, User, Newspaper, Users, Map, Trophy } from 'lucide-react'
 import './App.css'
 
@@ -106,68 +106,106 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app">
-        <Header account={account} onConnect={connectWallet} onDisconnect={disconnectWallet} />
-        <Routes>
-          <Route path="/" element={<HomePage tasks={tasks} news={sampleNews} />} />
-          <Route path="/missions" element={<MissionsPage tasks={tasks} setTasks={setTasks} profile={profile} />} />
-          <Route path="/profile" element={<ProfilePage profile={profile} setProfile={setProfile} account={account} />} />
-          <Route path="/news" element={<NewsPage news={sampleNews} />} />
-          <Route path="/soldiers" element={<SoldiersPage soldiers={sampleSoldiers} />} />
-          <Route path="/leaderboard" element={<LeaderboardPage soldiers={sampleSoldiers} />} />
-          <Route path="/roadmap" element={<RoadmapPage />} />
-        </Routes>
+        <Sidebar />
+        <div className="main-content">
+          <Header account={account} onConnect={connectWallet} onDisconnect={disconnectWallet} />
+          <Routes>
+            <Route path="/" element={<HomePage tasks={tasks} news={sampleNews} />} />
+            <Route path="/missions" element={<MissionsPage tasks={tasks} setTasks={setTasks} profile={profile} />} />
+            <Route path="/profile" element={<ProfilePage profile={profile} setProfile={setProfile} account={account} />} />
+            <Route path="/news" element={<NewsPage news={sampleNews} />} />
+            <Route path="/soldiers" element={<SoldiersPage soldiers={sampleSoldiers} />} />
+            <Route path="/leaderboard" element={<LeaderboardPage soldiers={sampleSoldiers} />} />
+            <Route path="/roadmap" element={<RoadmapPage />} />
+          </Routes>
+        </div>
+        <RightSidebar profile={profile} account={account} />
       </div>
     </BrowserRouter>
   )
 }
 
-function Header({ account, onConnect, onDisconnect }: any) {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const close = () => setDrawerOpen(false)
+function Sidebar() {
+  const location = useLocation()
+  const links = [
+    { to: '/', label: 'Home', icon: Home },
+    { to: '/missions', label: 'Missions', icon: Shield },
+    { to: '/profile', label: 'Profile', icon: User },
+    { to: '/news', label: 'News', icon: Newspaper },
+    { to: '/soldiers', label: 'Soldiers', icon: Users },
+    { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+    { to: '/roadmap', label: 'Roadmap', icon: Map },
+  ]
 
   return (
-    <>
-      <header className="header">
-        <div className="logo">
-          <img src="/redline logo.jpg" alt="Redline" className="logo-img" />
-          <div className="logo-text">
-            <span className="redline">REDLINE</span>
-            <span className="hub">ARMY</span>
-          </div>
+    <aside className="sidebar">
+      <div className="sidebar-logo">
+        <img src="/redline logo.jpg" alt="Redline" />
+        <div>
+          <div className="redline">REDLINE</div>
+          <div className="hub">ARMY</div>
         </div>
+      </div>
+      <nav>
+        {links.map(({ to, label, icon: Icon }) => (
+          <Link
+            key={to}
+            to={to}
+            className={`sidebar-link ${location.pathname === to ? 'active' : ''}`}
+          >
+            <Icon size={18} />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  )
+}
 
-        <div className="header-right">
-          <button className="menu-btn" onClick={() => setDrawerOpen(true)}>MENU</button>
-          <div className="wallet">
-            {account ? (
-              <>
-                <span className="address">{account.slice(0, 6)}...{account.slice(-4)}</span>
-                <button onClick={onDisconnect} className="disconnect-btn">Disconnect</button>
-              </>
-            ) : (
-              <button onClick={onConnect} className="connect-btn">Connect Wallet</button>
-            )}
-          </div>
-        </div>
-      </header>
+function Header({ account, onConnect, onDisconnect }: any) {
+  return (
+    <header className="top-bar">
+      <div className="top-bar-left">
+        <span className="live-dot" /> REDLINE SUPRA ARMY
+      </div>
+      <div className="wallet">
+        {account ? (
+          <>
+            <span className="address">{account.slice(0, 6)}...{account.slice(-4)}</span>
+            <button onClick={onDisconnect} className="disconnect-btn">Disconnect</button>
+          </>
+        ) : (
+          <button onClick={onConnect} className="connect-btn">Connect Wallet</button>
+        )}
+      </div>
+    </header>
+  )
+}
 
-      <div className={`drawer-overlay ${drawerOpen ? 'open' : ''}`} onClick={close} />
-      <aside className={`drawer ${drawerOpen ? 'open' : ''}`}>
-        <div className="drawer-header">
-          <span>MENU</span>
-          <button onClick={close} className="close-btn">✕</button>
+function RightSidebar({ profile, account }: any) {
+  return (
+    <aside className="right-sidebar">
+      <div className="sidebar-card">
+        <div className="sidebar-title">Soldier Status</div>
+        <div className="stat-row">
+          <span>Rank</span>
+          <strong className="rank">{profile.rank}</strong>
         </div>
-        <nav className="drawer-nav">
-          <Link to="/" className="drawer-link" onClick={close}><Home size={18} /> Home</Link>
-          <Link to="/missions" className="drawer-link" onClick={close}><Shield size={18} /> Missions</Link>
-          <Link to="/profile" className="drawer-link" onClick={close}><User size={18} /> Profile</Link>
-          <Link to="/news" className="drawer-link" onClick={close}><Newspaper size={18} /> Ecosystem News</Link>
-          <Link to="/soldiers" className="drawer-link" onClick={close}><Users size={18} /> Soldiers Hub</Link>
-          <Link to="/leaderboard" className="drawer-link" onClick={close}><Trophy size={18} /> Leaderboard</Link>
-          <Link to="/roadmap" className="drawer-link" onClick={close}><Map size={18} /> Roadmap</Link>
-        </nav>
-      </aside>
-    </>
+        <div className="stat-row">
+          <span>Points</span>
+          <strong>{profile.points}</strong>
+        </div>
+        <div className="stat-row">
+          <span>Wallet</span>
+          <strong className="mono">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not connected'}</strong>
+        </div>
+      </div>
+      <div className="sidebar-card">
+        <div className="sidebar-title">Quick Actions</div>
+        <Link to="/missions" className="quick-btn">View Missions</Link>
+        <Link to="/leaderboard" className="quick-btn">Leaderboard</Link>
+      </div>
+    </aside>
   )
 }
 
@@ -176,23 +214,23 @@ function HomePage({ tasks, news }: any) {
   const newestNews = news.slice(0, 3)
 
   return (
-    <main className="main">
+    <div className="page">
       <div className="hero">
         <img src="/Redline Banner.jpg" alt="Banner" className="banner" />
         <div className="hero-text">
-          <h1>Redline Supra Army</h1>
+          <h1>REDLINE SUPRA ARMY</h1>
           <p>One Army. One Chain. One Mission.</p>
         </div>
       </div>
 
-      <section className="highlight-section">
+      <section className="section">
         <h2>Newest Missions</h2>
         <div className="task-list">
           {newestTasks.map((task: Task) => (
             <div key={task.id} className="task">
-              <div className="task-info">
+              <div>
                 <h3>{task.title}</h3>
-                <p className="task-desc">{task.description}</p>
+                <p>{task.description}</p>
                 <span className="points">+{task.points} PTS</span>
               </div>
               <Link to="/missions" className="task-btn">View</Link>
@@ -201,14 +239,14 @@ function HomePage({ tasks, news }: any) {
         </div>
       </section>
 
-      <section className="highlight-section">
-        <h2>Latest Ecosystem News</h2>
+      <section className="section">
+        <h2>Latest News</h2>
         <div className="task-list">
           {newestNews.map((item: NewsItem) => (
             <div key={item.id} className="task">
-              <div className="task-info">
+              <div>
                 <h3>{item.title}</h3>
-                <p className="task-desc">{item.summary}</p>
+                <p>{item.summary}</p>
                 <span className="points">{item.date}</span>
               </div>
               <Link to="/news" className="task-btn">Read</Link>
@@ -216,7 +254,7 @@ function HomePage({ tasks, news }: any) {
           ))}
         </div>
       </section>
-    </main>
+    </div>
   )
 }
 
@@ -238,56 +276,43 @@ function MissionsPage({ tasks, setTasks, profile }: any) {
   }
 
   return (
-    <main className="main">
-      <div className="hero">
-        <img src="/Redline Banner.jpg" alt="Banner" className="banner" />
-        <div className="hero-text">
-          <h1>Active Missions</h1>
-          <p>Complete tasks. Earn points. Rise in rank.</p>
-        </div>
-      </div>
-
+    <div className="page">
+      <h1 className="page-title">Active Missions</h1>
       <div className="points-card">
-        <div className="points-info">
+        <div>
           <div className="label">Current Score</div>
           <div className="points-value">{profile.points}</div>
           <div className="points-sub">Rank: {profile.rank}</div>
         </div>
       </div>
-
-      <section className="tasks">
-        <h2>All Missions</h2>
-        <div className="task-list">
-          {tasks.map((task: Task) => (
-            <div key={task.id} className="task">
-              <div className="task-info">
-                <h3>{task.title}</h3>
-                <p className="task-desc">{task.description}</p>
-                <span className="points">+{task.points} PTS</span>
-                {task.status !== 'available' && <span className="status"> • {task.status.toUpperCase()}</span>}
-              </div>
-              <button className="task-btn" onClick={() => handleTaskAction(task)} disabled={task.status !== 'available'}>
-                {task.status === 'available' ? 'Start' : task.status}
-              </button>
+      <div className="task-list">
+        {tasks.map((task: Task) => (
+          <div key={task.id} className="task">
+            <div>
+              <h3>{task.title}</h3>
+              <p>{task.description}</p>
+              <span className="points">+{task.points} PTS</span>
+              {task.status !== 'available' && <span className="status"> • {task.status.toUpperCase()}</span>}
             </div>
-          ))}
-        </div>
-      </section>
-
+            <button className="task-btn" onClick={() => handleTaskAction(task)} disabled={task.status !== 'available'}>
+              {task.status === 'available' ? 'Start' : task.status}
+            </button>
+          </div>
+        ))}
+      </div>
       {selectedTask && (
         <div className="modal-overlay">
           <div className="modal">
             <h3>{selectedTask.title}</h3>
-            <p>{selectedTask.description}</p>
             <textarea placeholder="Paste the link or details..." value={submissionText} onChange={e => setSubmissionText(e.target.value)} rows={5} />
             <div className="modal-actions">
               <button onClick={() => setSelectedTask(null)} className="disconnect-btn">Cancel</button>
-              <button onClick={submitForm} className="connect-btn">Submit for Review</button>
+              <button onClick={submitForm} className="connect-btn">Submit</button>
             </div>
           </div>
         </div>
       )}
-    </main>
+    </div>
   )
 }
 
@@ -300,114 +325,101 @@ function ProfilePage({ profile, setProfile, account }: any) {
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000) }
 
   return (
-    <main className="main">
+    <div className="page">
       <h1 className="page-title">Soldier Profile</h1>
-      <div className="profile-header">
-        <div className="rank-badge">{profile.rank.toUpperCase()}</div>
-        <div className="profile-summary">
-          <div className="name">{profile.name || 'Unnamed Soldier'}</div>
-          <div className="wallet-short">{account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Wallet not connected'}</div>
-        </div>
-      </div>
       <div className="profile-card">
-        <div className="profile-row"><label>Display Name</label><input value={profile.name} onChange={e => handleChange('name', e.target.value)} placeholder="Your callsign or name" /></div>
+        <div className="profile-row"><label>Display Name</label><input value={profile.name} onChange={e => handleChange('name', e.target.value)} placeholder="Your callsign" /></div>
         <div className="profile-row"><label>Supra DNS</label><input value={profile.supraDns} onChange={e => handleChange('supraDns', e.target.value)} placeholder="yourname.supra" /></div>
         <div className="profile-row"><label>X / Twitter</label><input value={profile.twitter} onChange={e => handleChange('twitter', e.target.value)} placeholder="@username" /></div>
         <div className="profile-row"><label>Telegram</label><input value={profile.telegram} onChange={e => handleChange('telegram', e.target.value)} placeholder="@username" /></div>
-        <div className="profile-row"><label>Wallet ID</label><span className="value">{account || 'Not connected'}</span></div>
-        <div className="profile-row"><label>Current Rank</label><span className="value rank">{profile.rank}</span></div>
+        <div className="profile-row"><label>Wallet</label><span className="value">{account || 'Not connected'}</span></div>
+        <div className="profile-row"><label>Rank</label><span className="value rank">{profile.rank}</span></div>
         <div className="profile-row"><label>Points</label><span className="value">{profile.points}</span></div>
       </div>
       <div className="profile-actions">
         <button onClick={handleSave} className="connect-btn">Save Profile</button>
-        {saved && <span className="saved-msg">Profile saved</span>}
+        {saved && <span className="saved-msg">Saved</span>}
       </div>
-      <p className="profile-note">Rank and points will update automatically once on-chain verification is live.</p>
-    </main>
+    </div>
   )
 }
 
 function NewsPage({ news }: any) {
   return (
-    <main className="main">
-      <h1 className="page-title">Supra Ecosystem News</h1>
+    <div className="page">
+      <h1 className="page-title">Ecosystem News</h1>
       <div className="task-list">
         {news.map((item: NewsItem) => (
           <div key={item.id} className="task">
-            <div className="task-info">
+            <div>
               <h3>{item.title}</h3>
-              <p className="task-desc">{item.summary}</p>
+              <p>{item.summary}</p>
               <span className="points">{item.date}</span>
             </div>
           </div>
         ))}
       </div>
-    </main>
+    </div>
   )
 }
 
 function SoldiersPage({ soldiers }: any) {
   return (
-    <main className="main">
-      <h1 className="page-title">Soldiers Standing Strong</h1>
-      <p style={{ marginBottom: '1.2rem', color: '#888' }}>Soldiers actively supporting the Supra blockchain.</p>
+    <div className="page">
+      <h1 className="page-title">Soldiers Hub</h1>
       <div className="task-list">
         {soldiers.map((s: Soldier, i: number) => (
           <div key={i} className="task">
-            <div className="task-info">
+            <div>
               <h3>{s.name}</h3>
-              <p className="task-desc">{s.supra} • {s.rank}</p>
+              <p>{s.supra} • {s.rank}</p>
               <span className="points">{s.points} PTS</span>
             </div>
           </div>
         ))}
       </div>
-    </main>
+    </div>
   )
 }
 
 function LeaderboardPage({ soldiers }: any) {
   const sorted = [...soldiers].sort((a, b) => b.points - a.points)
-
   return (
-    <main className="main">
+    <div className="page">
       <h1 className="page-title">Leaderboard</h1>
-      <p style={{ marginBottom: '1.2rem', color: '#888' }}>Top soldiers ranked by points.</p>
       <div className="task-list">
         {sorted.map((s: Soldier, i: number) => (
           <div key={i} className="task leaderboard-item">
             <div className="rank-number">#{i + 1}</div>
-            <div className="task-info">
+            <div>
               <h3>{s.name}</h3>
-              <p className="task-desc">{s.supra} • {s.rank}</p>
+              <p>{s.supra} • {s.rank}</p>
             </div>
             <div className="points-big">{s.points} PTS</div>
           </div>
         ))}
       </div>
-    </main>
+    </div>
   )
 }
 
 function RoadmapPage() {
   return (
-    <main className="main">
-      <h1 className="page-title">Redline Roadmap</h1>
+    <div className="page">
+      <h1 className="page-title">Roadmap</h1>
       <div className="roadmap">
         {roadmapItems.map((item, i) => (
           <div key={i} className="roadmap-item">
             <div className="roadmap-phase">{item.phase}</div>
-            <div className="roadmap-content">
+            <div>
               <h3>{item.title}</h3>
               <span className={`status-badge ${item.status.toLowerCase().replace(' ', '-')}`}>{item.status}</span>
-              <ul>
-                {item.items.map((sub, j) => <li key={j}>{sub}</li>)}
-              </ul>
+              <ul>{item.items.map((sub, j) => <li key={j}>{sub}</li>)}</ul>
             </div>
           </div>
         ))}
       </div>
-    </main>
+    </div>
   )
 }
 
